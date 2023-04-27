@@ -1,5 +1,5 @@
-import random
 import os
+import random
 from tkinter import *
 from PIL import Image, ImageTk
 
@@ -7,15 +7,21 @@ window = Tk()
 window.title("Pussel")
 window.attributes('-type', 'dialog')
 
-image_directory = "/home/darpe/wallpapers/"
+screen_width = 800 #window.winfo_screenwidth()
+screen_height = 450 #window.winfo_screenheight()
+
+image_directory = "/Users/eskildarpe/Documents/Projects/pussel/images/"
 random_image = random.choice(os.listdir(image_directory))
 image = Image.open(image_directory+random_image)
-image = image.resize((800, 450))
+image = image.resize((screen_width, screen_height))
 
 buttons_pressed = []
 buttons = []
 
-positions = [(x, y) for y in range(3) for x in range(3)]
+rows = 3
+columns = 3
+
+positions = [(x+2, y) for x in range(columns) for y in range(rows)]
 
 def button_click(button):
     global buttons_pressed
@@ -24,6 +30,12 @@ def button_click(button):
     if len(buttons_pressed) == 2:
         swap_pieces(buttons_pressed[0], buttons_pressed[1])
         buttons_pressed = []
+    
+    image = button.cget("image")
+
+    current_image = Label(image=image)
+    current_image.grid(row=1, column=1, ipadx=10)
+    current_image.image = image
 
 def swap_pieces(piece_1, piece_2):
     piece_1_pos = piece_1.grid_info()
@@ -49,21 +61,23 @@ def swap_pieces(piece_1, piece_2):
          
         if button_pos == positions[index]:
             correct += 1
-    
-    if correct == 9:
+
+    if correct == rows*columns:
         for button in buttons:
             button.destroy()
         
-        label = Label(window, image=ImageTk.PhotoImage(image))
-        label.pack(fill=BOTH, expand=YES)
+        image = ImageTk.PhotoImage(image)
+        label = Label(window, image=image)
+        label.pack() 
         
+        label.image = image
 
 def shuffle_image(image, rows, columns):
     width, height = image.size
     piece_width = width // columns
     piece_height = height // rows
 
-    positions = [(x, y) for y in range(rows) for x in range(columns)]
+    positions = [(x, y) for x in range(columns) for y in range(rows)]
     
     pieces = []
     
@@ -86,7 +100,7 @@ def shuffle_image(image, rows, columns):
         x, y = pos
 
         button = Button(window, image=pieces[index], border=0, highlightthickness=0) 
-        button.grid(row=y, column=x, sticky="nsew")
+        button.grid(row=y, column=x+2)
         button.config(command=lambda button=button: button_click(button))
         buttons.append(button)
         button.image = pieces[index]
@@ -94,6 +108,16 @@ def shuffle_image(image, rows, columns):
 def start_puzzle(rows, columns):
     shuffle_image(image, rows, columns)
 
-start_puzzle(3, 3)
+start_puzzle(rows, columns)
+
+image = image.resize((800//3, 450//3))
+image = ImageTk.PhotoImage(image)
+
+reference_image = Label(image=image)
+reference_image.grid(row=2, column=1)
+reference_image.image = image
+
+#frame = Frame(window, width=100, height=screen_height)
+#frame.grid(row=0,column=0,padx=20,pady=20)
 
 window.mainloop()
