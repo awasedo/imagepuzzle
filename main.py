@@ -3,25 +3,7 @@ import random
 from tkinter import *
 from PIL import Image, ImageTk
 
-window = Tk()
-window.title("Pussel")
-window.attributes('-type', 'dialog')
-
-screen_width = 800 #window.winfo_screenwidth()
-screen_height = 450 #window.winfo_screenheight()
-
-image_directory = "/Users/eskildarpe/Documents/Projects/pussel/images/"
-random_image = random.choice(os.listdir(image_directory))
-image = Image.open(image_directory+random_image)
-image = image.resize((screen_width, screen_height))
-
-buttons_pressed = []
-buttons = []
-
-rows = 3
-columns = 3
-
-positions = [(x+2, y) for x in range(columns) for y in range(rows)]
+# Called when a piece is clicked.
 
 def button_click(button):
     global buttons_pressed
@@ -31,11 +13,14 @@ def button_click(button):
         swap_pieces(buttons_pressed[0], buttons_pressed[1])
         buttons_pressed = []
     
-    image = button.cget("image")
+    
+    elif len(buttons_pressed) == 1:
+        image = button.cget("image")
+        current_image = Label(small_image_frame, image=image)
+        current_image.grid(row=0, column=0)
+        current_image.image = image
 
-    current_image = Label(image=image)
-    current_image.grid(row=1, column=1, ipadx=10)
-    current_image.image = image
+# Swaps the position of two pieces that are clicked after one another.
 
 def swap_pieces(piece_1, piece_2):
     piece_1_pos = piece_1.grid_info()
@@ -61,16 +46,25 @@ def swap_pieces(piece_1, piece_2):
          
         if button_pos == positions[index]:
             correct += 1
-
+    
+    # If all pieces are in the correct place, delete them and display the whole picture.
+    
     if correct == rows*columns:
         for button in buttons:
             button.destroy()
         
-        image = ImageTk.PhotoImage(image)
-        label = Label(window, image=image)
-        label.pack() 
+        for image in small_image_frame.winfo_children():
+            image.destroy()
         
-        label.image = image
+        image = Image.open(image_directory+random_image)
+        image = image.resize((screen_width, screen_height))
+        image = ImageTk.PhotoImage(image)
+
+        background = Label(puzzle_frame, image=image)
+        background.grid(row=0, column=0, rowspan=rows, columnspan=columns)
+        background.image = image
+
+# Crops an image into rows*columns pieces that are then randomly distributed in a grid.         
 
 def shuffle_image(image, rows, columns):
     width, height = image.size
@@ -99,25 +93,81 @@ def shuffle_image(image, rows, columns):
         index = positions.index(pos)
         x, y = pos
 
-        button = Button(window, image=pieces[index], border=0, highlightthickness=0) 
-        button.grid(row=y, column=x+2)
+        button = Button(puzzle_frame, image=pieces[index], border=0, highlightthickness=0, relief="flat") 
+        button.grid(row=y, column=x)
         button.config(command=lambda button=button: button_click(button))
         buttons.append(button)
         button.image = pieces[index]
 
-def start_puzzle(rows, columns):
-    shuffle_image(image, rows, columns)
+# This function is called in the difficulty buttons.
+def start_puzzle(difficulty):
+    for button in puzzle_frame.winfo_children():
+        button.destroy()
 
-start_puzzle(rows, columns)
+    image = Image.open(image_directory+random_image)
+    image = image.resize((screen_width, screen_height))
+    
+    if difficulty == 0:
+        shuffle_image(image, 3, 3)
+    elif difficulty == 1:
+        shuffle_image(image, 5, 4)
+    elif difficulty == 2:
+        shuffle_image(image, 7, 6)
 
+window = Tk()
+window.title("Pussel")
+window.attributes('-type', 'dialog')
+
+screen_width = 800 #window.winfo_screenwidth()
+screen_height = 450 #window.winfo_screenheight()
+
+image_directory = "/home/darpe/images/"
+random_image = random.choice(os.listdir(image_directory))
+
+buttons_pressed = []
+buttons = []
+
+rows = 3
+columns = 3
+
+positions = [(x, y) for x in range(columns) for y in range(rows)]
+
+# Frame that contains the pieces.
+
+puzzle_frame = Frame(window)
+puzzle_frame.grid(row=0, column=1, rowspan=rows, columnspan=columns, padx=20, pady=20)
+
+# Frame that contains the mode buttons.
+
+mode_frame = Frame(window)
+mode_frame.grid(row=0, column=0, padx=20, pady=20)
+
+easy_button = Button(mode_frame, text="Easy", command=lambda: start_puzzle(0))
+easy_button.grid(row=1, column=0)
+
+normal_button = Button(mode_frame, text="Normal", command=lambda: start_puzzle(1))
+normal_button.grid(row=1, column=1)
+
+hard_button = Button(mode_frame, text="Hard", command=lambda: start_puzzle(2))
+hard_button.grid(row=1, column=2)
+
+image_button = Button(mode_frame, text="Select new image")
+image_button.grid(row=0, column=0)
+
+random_image_button = Button(mode_frame, text="New random image")
+random_image_button.grid(row=0, column=1)
+
+# Frame that contains the reference image and currently selected images.
+
+small_image_frame = Frame(window)
+small_image_frame.grid(row=1, column=0, rowspan=2, padx=20, pady=20)
+
+image = Image.open(image_directory+random_image)
 image = image.resize((800//3, 450//3))
 image = ImageTk.PhotoImage(image)
 
-reference_image = Label(image=image)
-reference_image.grid(row=2, column=1)
+reference_image = Label(small_image_frame, image=image)
+reference_image.grid(row=1, column=0)
 reference_image.image = image
-
-#frame = Frame(window, width=100, height=screen_height)
-#frame.grid(row=0,column=0,padx=20,pady=20)
 
 window.mainloop()
