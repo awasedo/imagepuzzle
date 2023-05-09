@@ -1,3 +1,4 @@
+import os
 import random
 from tkinter import *
 from tkinter import filedialog
@@ -134,10 +135,16 @@ def start_puzzle(difficulty):
     image = image.resize((screen_width, screen_height))
 
     if difficulty == 0:
+        rows = 3
+        columns = 3
         shuffle_image(image, rows, columns)
     elif difficulty == 1:
+        rows = 5
+        columns = 4
         shuffle_image(image, rows, columns)
     elif difficulty == 2:
+        rows = 6
+        columns = 6
         shuffle_image(image, rows, columns)
 
 initial_image = "/Users/username/Downloads/image.jpg"
